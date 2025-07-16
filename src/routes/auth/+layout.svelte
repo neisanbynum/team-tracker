@@ -4,7 +4,6 @@
 	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import { goto } from '$app/navigation';
-	import { Heading } from '$lib/components/custom/typography';
 
 	let { children } = $props();
 
@@ -12,8 +11,8 @@
 </script>
 
 
-<Stack class="p-4 h-fit">
-	<Card.Root class="w-124 max-w-full">
+<Stack class="p-4 h-fit select-none">
+	<Card.Root class="w-124 max-w-full shadow-sm hover:shadow-md">
 		<Card.Header>
 			<Card.Title>{register ? 'Registration' : 'Authentication'}</Card.Title>
 			<Card.Description>

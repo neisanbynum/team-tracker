@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { APIData } from '$lib/api/APIData';
 import { zodParseAsync } from '$lib/schemas/utils/parse.svelte';
-import { JSONResponse, type JSONMethodReturn } from '$lib/utils/api';
 import { getContext, setContext } from 'svelte';
 import { toast } from 'svelte-sonner';
 import type { ChangeEventHandler, FocusEventHandler } from 'svelte/elements';
@@ -21,7 +21,7 @@ export type InitializeFormParams<Schema extends z.ZodObject> = {
 	whenvalidate?: WhenValidateForm;
 	url: string;
 	method?: FormMethod;
-	onsuccess?: (response: JSONMethodReturn) => void;
+	onsuccess?: (data: any) => void;
 };
 
 export function initializeForm<Schema extends z.ZodObject>(params: InitializeFormParams<Schema>) {
@@ -33,7 +33,7 @@ class FormContext<Schema extends z.ZodObject> {
 	whenvalidate: WhenValidateForm;
 	url: string;
 	method: FormMethod;
-	onsuccess?: (response: JSONMethodReturn) => void;
+	onsuccess?: (data: any) => void;
 
 	loading = $state<boolean>(false);
 
@@ -52,9 +52,8 @@ class FormContext<Schema extends z.ZodObject> {
 		});
 	}
 
-	#clearfielderror = (key: keyof z.core.output<Schema>) => () => this.errors.delete(key);
-
 	#validatefield = async (key: keyof z.core.output<Schema>) => {
+		this.errors.delete(key);
 		const result = await zodParseAsync(Object.fromEntries(this.values), this.schema);
 		if (!result.success && result.errors.has(key)) {
 			this.errors.set(key, result.errors.get(key)!);
@@ -73,11 +72,11 @@ class FormContext<Schema extends z.ZodObject> {
 	onchange =
 		(key: keyof z.core.output<Schema>): ChangeEventHandler<FormInputElement> =>
 		(e) => {
-			this.#clearfielderror(key);
+			this.errors.delete(key);
 			this.values.set(key, e.currentTarget.value);
-			if (this.whenvalidate === 'onchange') {
-				this.#validatefield(key);
-			}
+			if (this.whenvalidate !== 'onchange') return;
+
+			this.#validatefield(key);
 		};
 
 	onblur =
@@ -97,24 +96,30 @@ class FormContext<Schema extends z.ZodObject> {
 			return;
 		}
 
-		const request = await fetch(this.url, {
+		const response = await fetch(this.url, {
 			method: this.method,
 			body: JSON.stringify(validate.data),
 			headers: {
 				'Context-Type': 'application/json'
 			}
 		});
-		const response = await JSONResponse(request);
+		const data = await APIData(response);
+		console.log(data);
 
 		this.loading = false;
 
-		if (!response.success) {
-			toast.error(response.general);
+		if (!data) {
+			toast.error('No Form Response Data');
+			return;
+		}
+
+		if (typeof data === 'object' && 'general' in data) {
+			toast.error(data.general);
 			return;
 		}
 
 		if (this.onsuccess) {
-			this.onsuccess(response);
+			this.onsuccess(data);
 		}
 	};
 }

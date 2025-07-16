@@ -70,7 +70,7 @@
 	<button
 		bind:this={ref}
 		data-slot="button"
-		class={cn(buttonVariants({ variant, size }), className)}
+		class={cn(buttonVariants({ variant, size }), 'select-none', className)}
 		{type}
 		{disabled}
 		{...restProps}

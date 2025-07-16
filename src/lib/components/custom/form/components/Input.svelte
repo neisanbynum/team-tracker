@@ -11,7 +11,8 @@
 				name={"username"}
 				label={"Username"}
 				desc={"Enter your username"} 
-				clearable 
+				clearable
+				class="w-2/3"
 			/>
 		```
 -->
@@ -37,15 +38,22 @@
 		}
 	>;
 
-	let { name, label, desc, type = 'text', clearable = false, ...rest }: FormInputProperties = $props();
+	let {
+		name,
+		label,
+		desc,
+		type = 'text',
+		clearable = false,
+		...rest
+	}: FormInputProperties = $props();
 	let id = $derived(`form-input-${name}`);
 
 	let inputtype = $state<InputType>(type);
-	const buttonclass = 'pointer-events-auto cursor-pointer aspect-square h-1/2';
+	const buttonclass = 'pointer-events-auto cursor-pointer size-4 absolute';
 
 	const passwordtoggle = () => {
 		if (type !== 'password') return;
-		inputtype = type === 'password' ? 'text' : 'password';
+		inputtype = inputtype === 'password' ? 'text' : 'password';
 	};
 
 	const form = useFormContext();
@@ -61,28 +69,36 @@
 			type={inputtype}
 			aria-errormessage="{name}-form-error"
 			aria-describedby="{name}-form-description"
+			aria-invalid={form.errors.has(name)}
 			value={form.values.get(name)}
 			onchange={form.onchange(name)}
 			onblur={form.onblur(name)}
 			class="w-full"
 		/>
-		<Stack variant="hor-fit" class="absolute right-0 w-fit gap-1 p-1">
-			<X class={cn(!clearable || !form.values.get(name) ? 'scale-0' : 'scale-100', buttonclass)} onclick={() => form.values.delete(name)} />
-			<Eye
-				class={cn(
-					type !== 'password' || inputtype === 'password' ? 'scale-0' : 'scale-100',
-					buttonclass
-				)}
-				onclick={passwordtoggle}
-			/>
-			<EyeClosed
-				class={cn(
-					type !== 'password' || inputtype !== 'password' ? 'scale-0' : 'scale-100',
-					buttonclass
-				)}
-				onclick={passwordtoggle}
-			/>
-		</Stack>
+		<Eye
+			class={cn(
+				type !== 'password' || inputtype === 'password' ? 'scale-0' : 'scale-100',
+				clearable && form.values.get(name) ? 'right-9' : 'right-4',
+				buttonclass
+			)}
+			onclick={passwordtoggle}
+		/>
+		<EyeClosed
+			class={cn(
+				type !== 'password' || inputtype !== 'password' ? 'scale-0' : 'scale-100',
+				clearable && form.values.get(name) ? 'right-9' : 'right-4',
+				buttonclass
+			)}
+			onclick={passwordtoggle}
+		/>
+		<X
+			class={cn(
+				!clearable || !form.values.get(name) ? 'scale-0' : 'scale-100',
+				'right-4',
+				buttonclass
+			)}
+			onclick={() => form.values.delete(name)}
+		/>
 	</Stack>
 	<FormDescription {name} text={desc} />
 	<FormErrorMessage {name} />
